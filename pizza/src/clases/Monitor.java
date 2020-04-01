@@ -42,6 +42,7 @@ public class Monitor {
             else{
                 inventPizza++;
                 System.out.println("invantario + 1= " + inventPizza);
+                notify();
             }
             if(inventPizza ==1) notify();
         }
