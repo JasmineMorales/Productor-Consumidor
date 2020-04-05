@@ -6,16 +6,17 @@
 package clases;
 
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import javax.swing.Timer;
+
 
 public class Monitor {
-    static final int ordenesMax = 10;
+    static public final int ordenesMax = 10;
     static int inventPizza= 0, pizzaReserv = 0, orden = 0, control = 0; //modficar si se quieren menos o mas pizzas en esprea 
     static boolean esperaOrden = false; 
     static controladorMonitor contMon = new controladorMonitor();
     static controladorConsumidor contCon = new controladorConsumidor();
     static controladorProductor contProd = new controladorProductor();
+
     
     public static void main(String args[]){
         contProd.start(); // inicia el hilo productor
@@ -87,4 +88,12 @@ public class Monitor {
         }
         
     }
+    
+    public int noOrden(){
+        return orden;
+    }
+    public int noInventario(){
+        return inventPizza;
+    }
+
 }

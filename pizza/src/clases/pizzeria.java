@@ -1,20 +1,24 @@
 package clases;
 
+import clases.Monitor.controladorMonitor;
 import java.awt.Image;
 import java.awt.Toolkit;
 import static java.lang.Thread.sleep;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.ImageIcon;
-
+import javax.swing.JOptionPane;
 
 public class pizzeria extends javax.swing.JFrame {
 
     public boolean es1 = true;
+    Monitor monitor = new Monitor(); 
+    int inven = 0;
+
     
     @Override
 public Image getIconImage() {
-   Image retValue = Toolkit.getDefaultToolkit().
+         Image retValue = Toolkit.getDefaultToolkit().
          getImage(ClassLoader.getSystemResource("imagenes/ico.png"));
   return retValue;
 }   
@@ -48,11 +52,18 @@ public Image getIconImage() {
                         Logger.getLogger(pizzeria.class.getName()).log(Level.SEVERE, null, ex);
                     }
                     lbl_cliente.setLocation(i, y);
+                   
                 } 
-////                es1==false;
-////            }
+                try {
+                 sleep(500);
+////              }
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(pizzeria.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                 quitarPersonaje();
         }
-    }
+        
+    }   
 
    @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -106,14 +117,39 @@ public Image getIconImage() {
     }// </editor-fold>//GEN-END:initComponents
 
     private void startActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startActionPerformed
-
-        colocarPizza();
         HiloAvanza h1 = new HiloAvanza();
-        h1.start();        
         HiloIrse h2 = new HiloIrse();
-        h2.start();
-//        quitarPizza();
-        
+        Pizza h3 = new Pizza();
+        controladorMonitor moni = new controladorMonitor();
+        int ordenes=0;
+        moni.crearPizza();
+        ordenes = monitor.noInventario() - monitor.noOrden();
+        h1.start();
+        if(ordenes <= 0){
+            h1.start();
+            while(ordenes != 10){
+                //h1.start();
+                //moni.crearPizza();
+                moni.crearPizza();
+                h1.start();
+                ordenes++;
+                h3.start();
+            }
+            h2.start();
+        }
+        else if(ordenes >= 9){
+           // h2.start();
+            while(ordenes != 0){
+                moni.consumirPizza();
+                h2.start();
+                ordenes--;
+                h3.start();
+            }
+        }
+        else if(ordenes == 0){
+            JOptionPane.showMessageDialog(rootPane, "Ingrese Mas Ordenes");
+        }
+            
     }//GEN-LAST:event_startActionPerformed
 
     public void colocarPizza()
@@ -128,8 +164,36 @@ public Image getIconImage() {
         lbl_pizza.setIcon(null);
     }
     
+    public void quitarPersonaje(){
+        lbl_cliente.setIcon(null);
+    }
     
+    public void quitarPersonajeSalir(){
+        lbl_cliente_irse.setIcon(null);
+    }
     
+    public class Pizza extends Thread{
+        public void run(){
+            while(inven != monitor.noOrden()){
+                try {
+                    sleep(100);
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(pizzeria.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                lbl_entregado.setText(Integer.toString(inven));
+                ImageIcon cajasPizza = new ImageIcon(getClass().getResource("/imagenes/pizza.png"));
+                ImageIcon icon = new ImageIcon(cajasPizza.getImage().getScaledInstance(lbl_pizza.getWidth(), lbl_pizza.getHeight(), Image.SCALE_DEFAULT));
+                lbl_pizza.setIcon(icon);
+                inven++;
+              
+             if(inven == monitor.noInventario()){
+                 controladorMonitor moni = new controladorMonitor();
+                 moni.crearPizza();
+             }
+            }
+        }
+    }
+      
     public class HiloIrse extends Thread{
         int x= lbl_cliente_irse.getX();
         int y= lbl_cliente_irse.getY();
@@ -141,20 +205,35 @@ public Image getIconImage() {
 //            while(es1 == true)
 //            {
             System.out.println(x);
+             try {
+                 sleep(1000);
+////              }
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(pizzeria.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            lbl_cliente_irse.setVisible(false);
             lbl_cliente_irse.setIcon(icon);
                 for(int i=x; i<=640; i=i+50)
                 {
                     System.out.println(i);
                     try {
-                        sleep(500);
+                        sleep(1000);
                     } catch (InterruptedException ex) {
                         Logger.getLogger(pizzeria.class.getName()).log(Level.SEVERE, null, ex);
                     }
+                    
                     lbl_cliente_irse.setLocation(i, y);
+                    lbl_cliente_irse.setVisible(true);
                 } 
-                lbl_cliente_irse.setIcon(null);
-////                es1==false;
+                
 ////            }
+                 try {
+                 sleep(700);
+////              }
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(pizzeria.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                 quitarPersonajeSalir();
         }
     }
     
@@ -168,8 +247,8 @@ public Image getIconImage() {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JLabel lbl_cliente;
-    private javax.swing.JLabel lbl_cliente_irse;
+    public javax.swing.JLabel lbl_cliente;
+    public javax.swing.JLabel lbl_cliente_irse;
     private javax.swing.JLabel lbl_contador;
     private javax.swing.JLabel lbl_entregado;
     private javax.swing.JLabel lbl_fondo;
