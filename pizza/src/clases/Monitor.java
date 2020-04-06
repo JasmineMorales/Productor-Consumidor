@@ -5,23 +5,31 @@
  */
 package clases;
 
+import java.util.Scanner;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JOptionPane;
 
 public class Monitor {
-    static final int ordenesMax = 10;
-    static int inventPizza= 0, pizzaReserv = 0, orden = 0, control = 0; //modficar si se quieren menos o mas pizzas en esprea 
+     static final int ordenesMax = 10;
+    public static int inventPizza= 0, pizzaReserv = 0, orden = 0, control = 0; //modficar si se quieren menos o mas pizzas en esprea 
     static boolean esperaOrden = false; 
     static controladorMonitor contMon = new controladorMonitor();
     static controladorConsumidor contCon = new controladorConsumidor();
     static controladorProductor contProd = new controladorProductor();
     
+    public static int tiempoconsu=0;
+    public static int tiempro=0;
+     static int op=0;
+    static Scanner sc = new Scanner(System.in);
+    
     public static void main(String args[]){
-        contProd.start(); // inicia el hilo productor
-        contCon.start();
+     
         
     }
+    
+    
     static class controladorProductor extends Thread{
         public void run(){
             while(true){
@@ -37,48 +45,78 @@ public class Monitor {
         }
     }
     static class controladorMonitor extends Thread{
-        public synchronized void crearPizza(){
+        
+        
+        public synchronized void crearPizza()        
+        {
+         try {
             if(inventPizza == ordenesMax) desactivar();
-            else{
-                inventPizza++;
-                System.out.println("invantario + 1= " + inventPizza);
-                notify();
+            else{             
+                    Thread.sleep(tiempro);
+                    inventPizza++;
+                   // System.out.println("Produciendo: " + inventPizza);
+                    notify();               
+                }
+                if(inventPizza ==1) notify();            
+             } 
+            catch (InterruptedException ex) 
+            {
+             JOptionPane.showMessageDialog(null, "error " + ex);
             }
-            if(inventPizza ==1) notify();
+         
         }
-        public synchronized void consumirPizza(){
-            if(!esperaOrden){
-                orden =  ThreadLocalRandom.current().nextInt(1, 15);
-                System.out.println("Nueva Orden: " + orden);
-                if(orden>=inventPizza){
-                    int ordenTemp = orden;
-                    orden = orden - inventPizza;
-                    inventPizza = 0;
-                    System.out.println("Inventario = " + inventPizza);
-                    System.out.println("La orden es mayor al inventario, esperara a completar la orden");
-                    System.out.println("Pendiente de completar: " + orden);
-                    esperaOrden = true;
-                    //desactivar();
-                    notify();
-                }else{
-                    inventPizza = inventPizza - orden;
-                    System.out.println("Inventario - " + orden + " = " + inventPizza);
+   //--------------------------------------------------     
+        
+        public synchronized void consumirPizza()
+        {
+              try 
+                {
+         
+                   if(!esperaOrden)
+                     {
+                        Thread.sleep(tiempoconsu);
+                         orden =  ThreadLocalRandom.current().nextInt(1, ordenesMax);
+                        // System.out.println("Nueva Orden: " + orden);
+                         if(orden>=inventPizza)
+                         {
+                           //  System.out.println("Entregadas: " + inventPizza);
+                             orden = orden - inventPizza;
+                             inventPizza = 0;                             
+                           //  System.out.println("Pendientes: " + orden);
+                             esperaOrden = true;
+                             //desactivar();
+                             notify();
+                         }else{
+                             // Thread.sleep(tiempoconsu);
+                             inventPizza = inventPizza - orden;
+                           //  System.out.println("Orden de: " + orden + " Completa ");
+                          //   System.out.println("Inventario: " + inventPizza);
+                         }
+                     }else{
+                         if(orden > inventPizza){
+                           //  System.out.println("Esperando Orden");
+                             //Thread.sleep(tiempoconsu);
+                             desactivar();
+                             notify();
+                         }else{
+                              //Thread.sleep(tiempoconsu);
+                            // System.out.println("Orden completa");
+                             inventPizza = inventPizza - orden;
+                           //  System.out.println("Inventario = " + inventPizza);
+                             esperaOrden = false;
+                         }
+                     }
+
+             } catch (InterruptedException ex) 
+                {
+                    JOptionPane.showMessageDialog(null, "error " + ex);
                 }
-            }else{
-                if(orden > inventPizza){
-                    System.out.println("Esperando Orden");
-                    desactivar();
-                    notify();
-                }else{
-                    System.out.println("Orden compreta");
-                    inventPizza = inventPizza - orden;
-                    System.out.println("Inventario = " + inventPizza);
-                    esperaOrden = false;
-                }
-            }
             
         }
-        private void desactivar(){
+        
+        
+        private void desactivar()
+        {
             try{
                 Thread.sleep(100);
                 wait(); // Duerme al proceso en turno
@@ -87,4 +125,14 @@ public class Monitor {
         }
         
     }
+
+
+    public int noOrden(){
+        return orden;
+    }
+    public int noInventario(){
+        return inventPizza;
+    }
+
 }
+
